@@ -1,0 +1,5 @@
+[server]
+# Specify a stable Python version for deployment
+# Python 3.9, 3.10, or 3.11 are good choices for pandas compatibility.
+# Python 3.12 and 3.13 are very new and might cause compilation issues with some libraries.
+pythonVersion = "3.10"
