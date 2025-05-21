@@ -1,0 +1,23 @@
+# PyCharm specific files
+.idea/
+
+# Python virtual environments
+.venv/
+env/  # Include 'env/' as a common alternative name for virtual environments
+
+# Compiled Python files
+__pycache__/
+*.pyc
+
+# macOS specific files (if you are on macOS)
+.DS_Store
+
+# SQLite database file
+# It is generally good practice to IGNORE your local SQLite database file
+# because:
+# 1. Data created during development/testing isn't typically part of the source code.
+# 2. It can grow large and bloat your Git repository history.
+# 3. For ephemeral environments like Streamlit Cloud's free tier, the database
+#    will be recreated from scratch (or revert to a committed version if not ignored)
+#    on every app restart anyway.
+ecowise-mvp.db
