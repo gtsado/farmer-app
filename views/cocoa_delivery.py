@@ -21,19 +21,25 @@ from database.db import (
     get_sacks_for_batch,
     get_covered_ids_by_type,
     create_invoice,
-    get_all_invoices
+    get_all_invoices,
+    get_sack_ownership,
+    get_bags_for_sack,
+    get_batches_for_sack,
+    get_bundles_for_sack,
+    get_all_sack_ids
 )
 
 def run_cocoa_delivery():
     st.title("Cocoa Delivery")
 
-    tab1, tab2, tab3, tab4 ,tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4 ,tab5, tab6, tab7 = st.tabs([
         "📥 Record Sack Delivery",
         "📦 Aggregate Sacks into Bags",
         "🧾 View Bags + Contributions",
         "🔄 Aggregate Bags into Batches",
         "🛡️ CMA Warrant Receipts",
-        "Invoices"
+        "Invoices",
+        "Track Sack"
     ])
 
     # === Tab 1: Record Sack Delivery ===
@@ -326,3 +332,56 @@ def run_cocoa_delivery():
                 df_inv["covered_batches"] = df_inv["covered_batches"].apply(lambda j: ", ".join(json.loads(j)))
                 df_inv["percent_to_farmers"] = (df_inv["percent_to_farmers"] * 100).round(2).astype(str) + "%"
                 st.dataframe(df_inv, use_container_width=True)
+    with tab7:
+        st.subheader("Track a Sack Through the System")
+
+        sack_ids = get_all_sack_ids()
+        chosen = st.selectbox("Select Sack ID", sack_ids, key="track_sack_select")
+        manual = st.text_input("or paste Sack ID here", key="track_sack_input")
+
+        if st.button("Search", key="track_sack_btn"):
+            raw_manual = manual.strip()
+            if raw_manual:
+                sack_id = raw_manual
+            else:
+                sack_id = chosen
+            if not sack_id:
+                st.error("Please select or paste a Sack ID.")
+            else:
+                # 1) Sack & Farmer info
+                info = get_sack_ownership(sack_id)
+                if info is None:
+                    st.error(f"No sack found with ID `{sack_id}`.")
+                else:
+                    # ADDED LINES START HERE
+                    st.markdown(f"**Sack ID:** {sack_id}")
+                    st.markdown(f"**Sack Weight:** {info['weight_kg']} kg")
+                    st.markdown(f"**Sack Value:** ₦{info['value_paid']:,}")
+                    # ADDED LINES STOP HERE
+                    st.markdown(f"**Delivered at:** {info['delivered_at']}")
+                    st.markdown(f"**Delivered by:** {info['farmer_name']} (ID: {info['farmer_id']})")
+
+                # 2) Bags
+                df_bags = get_bags_for_sack(sack_id)
+                if df_bags.empty:
+                    st.info("This sack has not been bagged yet.")
+                else:
+                    st.markdown("**Bags Containing This Sack**")
+                    st.dataframe(df_bags, use_container_width=True)
+
+                # 3) Batches
+                df_batches = get_batches_for_sack(sack_id)
+                if df_batches.empty:
+                    st.info("This sack’s bag(s) have not been processed into any batch.")
+                else:
+                    st.markdown("**Batches Containing This Sack**")
+                    df_batches["weight_mt"] = df_batches["weight_mt"].round(2)
+                    st.dataframe(df_batches, use_container_width=True)
+
+                # 4) Bundles
+                df_bundles = get_bundles_for_sack(sack_id)
+                if df_bundles.empty:
+                    st.info("This sack has not been included in any financing bundle.")
+                else:
+                    st.markdown("**Bundles Containing This Sack**")
+                    st.dataframe(df_bundles, use_container_width=True)

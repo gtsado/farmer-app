@@ -1208,3 +1208,112 @@ def get_all_invoices():
     cols = [d[0] for d in cursor.description]
     conn.close()
     return pd.DataFrame(rows, columns=cols)
+
+
+def get_sack_ownership(sack_id):
+    """
+    Returns the farmer who delivered this sack plus the sack’s weight, original value, and delivery time.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            f.first_name || ' ' || f.last_name AS farmer_name,
+            f.id               AS farmer_id,
+            s.weight_kg,       -- ADDED LINES START HERE
+            s.value_paid,      -- ADDED LINES STOP HERE
+            s.delivered_at     -- ADDED LINES START HERE
+        FROM sacks s
+        JOIN farmers f ON s.farmer_id = f.id
+        WHERE s.id = ?
+    """, (sack_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "farmer_name":  row[0],
+            "farmer_id":    row[1],
+            "weight_kg":    row[2],  # ADDED LINES START HERE
+            "value_paid":   row[3],  # ADDED LINES STOP HERE
+            "delivered_at": row[4]   # ADDED LINES START HERE
+        }
+    return None
+
+def get_bags_for_sack(sack_id):
+    """
+    Returns a DataFrame of all bags that include this sack.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT b.id AS bag_id,
+               b.created_at,
+               bs.allocated_weight_kg
+          FROM bag_sacks bs
+          JOIN bags b ON bs.bag_id = b.id
+         WHERE bs.sack_id = ?
+         ORDER BY b.created_at
+    """, (sack_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return pd.DataFrame(rows, columns=["bag_id","created_at","allocated_weight_kg"])
+
+def get_batches_for_sack(sack_id):
+    """
+    Returns a DataFrame of all distinct batches (60MT) that include any bag containing this sack.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT              -- ADDED LINES START HERE
+               bat.id            AS batch_id,
+               bat.product_type,
+               bat.weight_mt,
+               bat.created_at
+          FROM batch_bags bb
+          JOIN batches bat ON bb.batch_id = bat.id
+         WHERE bb.bag_id IN (
+             SELECT bs.bag_id
+               FROM bag_sacks bs
+              WHERE bs.sack_id = ?
+         )
+      ORDER BY bat.created_at       -- ADDED LINES STOP HERE
+    """, (sack_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return pd.DataFrame(rows, columns=["batch_id","product_type","weight_mt","created_at"])
+
+def get_bundles_for_sack(sack_id):
+    """
+    Returns a DataFrame of all distinct financing bundles that include this sack.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT              -- ADDED LINES START HERE
+               bnd.id           AS bundle_id,
+               bnd.filter_type,
+               bnd.filter_value,
+               bnd.interest_rate,
+               bnd.status
+          FROM bundle_sacks bs
+          JOIN bundles bnd ON bs.bundle_id = bnd.id
+         WHERE bs.sack_id = ?
+    """, (sack_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return pd.DataFrame(rows, columns=[
+        "bundle_id","filter_type","filter_value","interest_rate","status"
+    ])  # ADDED LINES STOP HERE
+
+
+def get_all_sack_ids():
+    """
+    Returns a list of every sack ID in the system, most recent first.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM sacks ORDER BY delivered_at DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
