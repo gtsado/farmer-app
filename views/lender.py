@@ -81,7 +81,7 @@ def run_lender_management():
                         try:
                             update_lender_position(selected_lender_id, new_position)
                             st.success(f"Lender '{selected_lender_id}' position updated to ₦{new_position:,.2f}.")
-                            st.experimental_rerun() # Rerun to refresh the table
+                            st.rerun() # Rerun to refresh the table
                         except Exception as e:
                             st.error(f"Error updating lender position: {e}")
 
@@ -193,7 +193,7 @@ def run_lender_management():
                         st.session_state.bundle_filter_type_val = "None"
                         st.session_state.bundle_filter_value_val = ""
                         st.session_state.bundle_interest_rate_val = 0.0
-                        st.experimental_rerun() # Rerun to clear widgets and update display
+                        st.rerun() # Rerun to clear widgets and update display
                     except Exception as e:
                         st.error(f"Error creating bundle: {e}")
                 else:
@@ -277,7 +277,7 @@ def run_lender_management():
                             funding_id = fund_bundle(selected_lender_id, bundle_id, amount_to_fund)
                             st.success(
                                 f"Bundle `{bundle_id}` funded with ₦{amount_to_fund:,.2f} by lender `{selected_lender_id}`. Funding ID: `{funding_id}`.")
-                            st.experimental_rerun()  # Refresh to update lender position and bundle status
+                            st.rerun()  # Refresh to update lender position and bundle status
                         except ValueError as ve:
                             st.error(f"Funding Error: {ve}")
                         except Exception as e:

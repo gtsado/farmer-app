@@ -92,7 +92,7 @@ def run_cocoa_delivery():
                 st.success(f"✅ Created {len(bag_ids)} bag(s):")
                 for bid in bag_ids:
                     st.write(bid)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.info("No eligible sacks found for auto-fill.")
 
@@ -116,7 +116,7 @@ def run_cocoa_delivery():
 
                 bag_id = create_bag_with_sacks(manual_allocations)
                 st.success(f"Bag `{bag_id}` created with {len(manual_allocations)} sack(s).")
-                st.experimental_rerun()
+                st.rerun()
 
     with tab3:
         st.subheader("View All Bags + Sack Contributions")
@@ -212,7 +212,7 @@ def run_cocoa_delivery():
                 elif st.button("Create Batch", key="batch_manual_btn3"):
                     batch_id = create_batch_with_bags(chosen, product_type="liquor")
                     st.success(f"Created batch `{batch_id}`")
-                    st.experimental_rerun()
+                    st.rerun()
 
             st.markdown("---")
 
@@ -223,7 +223,7 @@ def run_cocoa_delivery():
                     st.success(f"Created {len(new_bs)} batch(es):")
                     for b in new_bs:
                         st.write(f"• {b}")
-                    st.experimental_rerun()
+                    st.rerun()
                 else:
                     st.info("No eligible bags to batch.")
 
@@ -258,8 +258,8 @@ def run_cocoa_delivery():
                 else:
                     rid = create_warrant_receipt(wr_type, sel)
                     st.success(f"Issued `{rid}` covering {len(sel)} item(s).")
-                    # ADD st.experimental_rerun() AFTER THE ACTION
-                    st.experimental_rerun()
+                    # ADD st.rerun() AFTER THE ACTION
+                    st.rerun()
 
         st.markdown("---")
         dfwr = get_all_warrant_receipts()
