@@ -333,7 +333,7 @@ def run_cocoa_delivery():
                 df_inv["percent_to_farmers"] = (df_inv["percent_to_farmers"] * 100).round(2).astype(str) + "%"
                 st.dataframe(df_inv, use_container_width=True)
     with tab7:
-        st.subheader("Track a Sack Through the System")
+        st.subheader("Track a Sack Through the Process")
 
         sack_ids = get_all_sack_ids()
         chosen = st.selectbox("Select Sack ID", sack_ids, key="track_sack_select")

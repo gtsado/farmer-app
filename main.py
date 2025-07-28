@@ -10,6 +10,7 @@ from views.farmers import run_farmers
 from views.cocoa_delivery import run_cocoa_delivery
 from views.lender import run_lender_management
 from views.tips import run_tips
+from views.qr_codes import run_qr_codes
 # from views.dashboard import run_dashboard
 
 
@@ -24,6 +25,7 @@ def main():
 		"Cocoa Delivery",
 		"Lender & Bundle Management",
 		"Tips",
+		"Generate & View QR Codes",
 		"Dashboard"
 	]
 
@@ -46,6 +48,8 @@ def main():
 	# 	run_bundles()
 	elif choice == "Tips":
 		run_tips()
+	elif choice == "Generate & View QR Codes":
+		run_qr_codes()
 	elif choice == "Dashboard":
 		run_dashboard()
 

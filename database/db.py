@@ -1317,3 +1317,114 @@ def get_all_sack_ids():
     rows = cursor.fetchall()
     conn.close()
     return [row[0] for row in rows]
+
+def get_farmer_profile(farmer_id):
+    """
+    Returns a dict with farmer details plus:
+      - total_sacks: how many sacks they've delivered
+      - total_weight: sum of weight_kg across their sacks
+      - total_value: sum of value_paid across their sacks
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Basic demographics
+    cursor.execute("""
+        SELECT first_name, last_name, email, country, city, gender, phone_number
+          FROM farmers WHERE id = ?
+    """, (farmer_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return None
+    profile = dict(zip(
+        ["first_name","last_name","email","country","city","gender","phone_number"],
+        row
+    ))
+
+    # Aggregates
+    cursor.execute("""
+        SELECT 
+          COUNT(*) AS total_sacks,
+          COALESCE(SUM(weight_kg),0),
+          COALESCE(SUM(value_paid),0)
+        FROM sacks
+        WHERE farmer_id = ?
+    """, (farmer_id,))
+    sacks_count, total_weight, total_value = cursor.fetchone()
+    conn.close()
+
+    profile.update({
+        "total_sacks":  sacks_count,
+        "total_weight": total_weight,
+        "total_value":  total_value
+    })
+    return profile
+
+
+def get_batch_contributors(batch_id):
+    """
+    Returns a DataFrame listing each distinct farmer_id who contributed to the batch,
+    and the warehouses those sacks came from.
+    """
+    import pandas as pd
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT DISTINCT
+          s.farmer_id,
+          s.warehouse
+        FROM batch_bags bb
+        JOIN bag_sacks  bs ON bb.bag_id = bs.bag_id
+        JOIN sacks      s  ON bs.sack_id = s.id
+        WHERE bb.batch_id = ?
+    """, (batch_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return pd.DataFrame(rows, columns=["farmer_id","warehouse"])
+
+def get_all_farmer_ids():
+    """
+    Returns a list of all farmer IDs, most recent first.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id
+          FROM farmers
+         ORDER BY created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+
+def get_all_bag_ids():
+    """
+    Returns a list of all bag IDs, most recent first.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id
+          FROM bags
+         ORDER BY created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+
+def get_all_batch_ids():
+    """
+    Returns a list of all batch IDs, most recent first.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id
+          FROM batches
+         ORDER BY created_at DESC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
